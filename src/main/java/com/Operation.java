@@ -5,10 +5,27 @@ public class Operation {
    private String path;
    private Object value;
 
+   public static Operation add(String path, Object value) {
+      return new Operation("add", path, value);
+   }
+
+   public static Operation remove(String path) {
+      return new Operation("remove", path);
+   }
+
+   public static Operation replace(String path, Object value) {
+      return new Operation("replace", path, value);
+   }
+
    public Operation(String op, String path, Object value) {
       this.op = op;
       this.path = path;
       this.value = value;
+   }
+
+   public Operation(String op, String path) {
+      this.op = op;
+      this.path = path;
    }
 
    public String getOp() {

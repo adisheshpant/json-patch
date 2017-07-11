@@ -6,6 +6,8 @@ import com.Operation;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 
 public class JsonPatchTest {
@@ -14,8 +16,10 @@ public class JsonPatchTest {
 
   @org.junit.Test
   public void test() throws IOException {
-    String s1 = "{ \"id\" : \"213213\", \"junk\":[ [1,2], [3,4] ], \"a\" : { \"b\" : \"2016-09-23T16:00:00.00Z\" }}";
-    String s2 = "{ \"id\" : \"321312\", \"junk\":[ [1,2,4], [3,4] ], \"a\" : { \"extra\": 213, \"b\" : \"2016-09-23T16:00:00.00Z\" }}";
+    String s1 = new String(Files.readAllBytes(Paths.get(getClass().getResource("/complex1.json").getFile())));
+    String s2 = new String(Files.readAllBytes(Paths.get(getClass().getResource("/simple1.json").getFile())));
+    System.out.println(s1);
+    System.out.println(s2);
     List<Operation> operationList = jsonPatch.getDiff(s1, s2);
     operationList.forEach(System.out::println);
   }
