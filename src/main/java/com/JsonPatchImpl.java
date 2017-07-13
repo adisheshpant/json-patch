@@ -35,61 +35,89 @@ public class JsonPatchImpl implements JsonPatch {
     if (json1.equals(json2)) return emptyList();
 
     final List<Operation> diff = new ArrayList<>();
-    compare(json1, json2, "/", diff);
+    compare(json1, json2, "", diff);
 
     return diff;
   }
 
-  private static void compare(JsonNode j1, JsonNode j2, String path, List<Operation> operations) {
-    if (j1.equals(j2)) return;
+  /**
+   * Compare two JSON nodes recursively.
+   *
+   * @param json1
+   * @param json2
+   * @param path
+   * @param operations
+   */
+  private static void compare(JsonNode json1, JsonNode json2, String path, List<Operation> operations) {
 
-    JsonNodeType n1 = j1.getNodeType();
-    JsonNodeType n2 = j2.getNodeType();
+    if (json1 != null && json2 != null) {
 
-    if (n1 == OBJECT && n2 == OBJECT) {
-      compareJObjects(j1, j2, path, operations);
-    } else if (n1 == ARRAY && n2 == ARRAY) {
-      compareArrays((ArrayNode) j1, (ArrayNode) j2, path, operations);
-    } else {
-      operations.add(Operation.replace(path, j2.toString()));
+      if (json1.equals(json2)) {
+        return;
+      }
+
+      JsonNodeType n1 = json1.getNodeType();
+      JsonNodeType n2 = json2.getNodeType();
+
+      if (n1 == OBJECT && n2 == OBJECT) {
+        compareObjects(json1, json2, path + "/", operations);
+      } else if (n1 == ARRAY && n2 == ARRAY) {
+        compareArrays((ArrayNode) json1, (ArrayNode) json2, path + "/", operations);
+      } else {
+        operations.add(Operation.replace(path, json2.toString()));
+      }
+
+    } else if (json1 != null) {
+      operations.add(Operation.remove(path));
+    } else if (json2 != null) {
+      operations.add(Operation.add(path, json2.toString()));
     }
   }
 
-  private static void compareJObjects(JsonNode json1, JsonNode json2, String path, List<Operation> operations) {
-    Iterator<Entry<String, JsonNode>> fields1 = json1.fields();
+  /**
+   * Compare two JSON objects. Object comparison involves field by field comparisons. If a field is
+   * missing
+   *
+   * @param json1
+   * @param json2
+   * @param path
+   * @param operations
+   */
+  private static void compareObjects(JsonNode json1, JsonNode json2, String path, List<Operation> operations) {
 
     // Compare L to R
-    while (fields1.hasNext()) {
-      Entry<String, JsonNode> entry = fields1.next();
-      JsonNode field1Node = entry.getValue();
-      String field1Name = entry.getKey();
-
-      // Check if second json is missing the field
-      if (!json2.has(field1Name)) {
-        operations.add(Operation.add(path + field1Name, field1Node.toString()));
-      } else {
-        compare(field1Node, json2.get(field1Name), path + field1Name + "/", operations);
-      }
+    Iterator<Entry<String, JsonNode>> json1Fields = json1.fields();
+    while (json1Fields.hasNext()) {
+      Entry<String, JsonNode> entry = json1Fields.next();
+      JsonNode json1Field = entry.getValue();
+      String json1FieldName = entry.getKey();
+      compare(json1Field, json2.get(json1FieldName), path + json1FieldName, operations);
     }
 
     // Compare R to L, only the missing ones
-    Iterator<Entry<String, JsonNode>> fields2 = json2.fields();
-    while (fields2.hasNext()) {
-      Entry<String, JsonNode> entry = fields2.next();
-      if (!json1.has(entry.getKey())) {
-        operations.add(Operation.remove(path + entry.getKey()));
+    Iterator<Entry<String, JsonNode>> json2Fields = json2.fields();
+    while (json2Fields.hasNext()) {
+      Entry<String, JsonNode> entry = json2Fields.next();
+      String json2FieldName = entry.getKey();
+      if (!json1.has(json2FieldName)) {
+        operations.add(Operation.remove(path + json2FieldName));
       }
     }
   }
 
+  /**
+   * @param a1
+   * @param a2
+   * @param path
+   * @param operations
+   */
   private static void compareArrays(ArrayNode a1, ArrayNode a2, String path, List<Operation> operations) {
-    if (a1.equals(a2)) return;
 
     for (int i = 0; i < a1.size(); i++) {
       if (i >= a2.size()) {
         operations.add(Operation.add(path + i, a1.get(i).toString()));
       } else {
-        compare(a1.get(i), a2.get(i), path + i + "/", operations);
+        compare(a1.get(i), a2.get(i), path + i, operations);
       }
     }
 

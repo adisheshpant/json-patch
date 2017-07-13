@@ -16,8 +16,8 @@ public class JsonPatchTest {
 
   @org.junit.Test
   public void test() throws IOException {
-    String s1 = new String(Files.readAllBytes(Paths.get(getClass().getResource("/complex1.json").getFile())));
-    String s2 = new String(Files.readAllBytes(Paths.get(getClass().getResource("/simple1.json").getFile())));
+    String s1 = new String(Files.readAllBytes(Paths.get(getClass().getResource("/simple1.json").getFile())));
+    String s2 = new String(Files.readAllBytes(Paths.get(getClass().getResource("/simple2.json").getFile())));
     System.out.println(s1);
     System.out.println(s2);
     List<Operation> operationList = jsonPatch.getDiff(s1, s2);
